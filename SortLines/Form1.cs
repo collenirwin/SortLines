@@ -9,11 +9,12 @@ namespace SortLines {
 
         #region Vars
 
-        int[] arry = new int[50];
-        int numVals = 50;
-        int sortType = 0;
+        int[] arry    = new int[50];
+        int sortType  = 0;
         int sleepTime = 100;
-        int writes = 0;
+        int writes    = 0;
+        bool goFast   = false;
+
         Random ran = new Random();
 
         private delegate void dUpdatePanel();
@@ -35,24 +36,24 @@ namespace SortLines {
         }
 
         private void pnlMain_Paint(object sender, PaintEventArgs e) {
-            Graphics g = e.Graphics;
-            int offset = 0;
-            int width = pnlMain.Width / numVals;
+            Graphics g   = e.Graphics;
+            float offset = 0.0f;
+            float width  = (float)pnlMain.Width / (float)arry.Length;
 
             for (int x = 0; x < arry.Length; x++) {
-                int height = Convert.ToInt32(Convert.ToDouble(pnlMain.Height) * (Convert.ToDouble(arry[x])/ 50));
+                int height = Convert.ToInt32(Convert.ToDouble(pnlMain.Height) * (Convert.ToDouble(arry[x]) / arry.Length));
 
                 if (cboStyle.SelectedIndex == 0) { // Lines
                     g.FillRectangle(Brushes.ForestGreen,
-                        new Rectangle(offset, pnlMain.Height - height, width, height));
+                        new RectangleF(offset, pnlMain.Height - height, width, height));
 
                 } else if (cboStyle.SelectedIndex == 1) { // Boxes
                     g.FillRectangle(Brushes.ForestGreen,
-                        new Rectangle(offset, pnlMain.Height - height, width, width));
+                        new RectangleF(offset, pnlMain.Height - height, width, width));
 
                 } else if (cboStyle.SelectedIndex == 2) { // ?????
                     g.FillRectangle(Brushes.ForestGreen,
-                        new Rectangle(offset, pnlMain.Height - height, width, ran.Next(1, height)));
+                        new RectangleF(offset, pnlMain.Height - height, width, ran.Next(1, height)));
 
                 }
 
@@ -71,16 +72,22 @@ namespace SortLines {
 
                 btnReset.Hide();
                 btnSort.Hide();
-                gbxType.Hide();
+                cboSort.Enabled  = false;
+                txtItems.Enabled = false;
                 writes = 0;
                 lblWrites.Text = "";
                 bgwMain.RunWorkerAsync();
             }
         }
 
+        private void txtItems_ValueChanged(object sender, EventArgs e) {
+            arry = new int[(int)txtItems.Value];
+            reset();
+        }
+
         private void reset() {
             for (int x = 0; x < arry.Length; x++) {
-                //arry[x] = ran.Next(1, 101);
+                // arry[x] = ran.Next(1, 101);
                 arry[x] = x + 1;
             }
 
@@ -93,7 +100,7 @@ namespace SortLines {
         }
 
         private void Form1_ResizeEnd(object sender, EventArgs e) {
-            pnlMain.Invalidate();
+            this.Refresh();
         }
 
         private void btnStop_Click(object sender, EventArgs e) {
@@ -355,7 +362,10 @@ namespace SortLines {
 
         private void updateGraph() {
             pnlMain.Invoke(new dUpdatePanel(updatePanel));
-            System.Threading.Thread.Sleep(sleepTime);
+
+            if (!chkFast.Checked) {
+                System.Threading.Thread.Sleep(sleepTime);
+            }
 
             writes++;
         }
@@ -403,7 +413,8 @@ namespace SortLines {
         private void bgwMain_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
             btnReset.Show();
             btnSort.Show();
-            gbxType.Show();
+            cboSort.Enabled  = true;
+            txtItems.Enabled = true;
             lblWrites.Text = writes.ToString();
         }
 
